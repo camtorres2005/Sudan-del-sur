@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sudán del Sur · Cronología de un conflicto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --charcoal:#14160f;
+    --charcoal-2:#1b1e14;
+    --panel:#20241a;
+    --olive:#79885a;
+    --olive-dim:#4c5638;
+    --deep-green:#2c3a26;
+    --beige:#e9e1cb;
+    --beige-dim:#a89f83;
+    --white:#f6f3ea;
+    --red:#7c3232;
+    --red-bright:#a8483f;
+    --line:rgba(233,225,203,0.16);
+    --line-strong:rgba(233,225,203,0.32);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--charcoal);
+    color:var(--white);
+    font-family:'Inter',sans-serif;
+    overflow:hidden;
+  }
+  body{
+    background-image:
+      radial-gradient(ellipse at 20% -10%, rgba(121,136,90,0.16), transparent 55%),
+      radial-gradient(ellipse at 100% 110%, rgba(124,50,50,0.12), transparent 50%);
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){ }
+  }
+  .app{
+    position:relative;
+    height:100%;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- paper grain ---------- */
+  .grain{
+    position:fixed; inset:0; pointer-events:none; z-index:5;
+    opacity:0.05; mix-blend-mode:overlay;
+  }
+
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    position:relative; z-index:20;
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding:18px 22px 10px;
+    gap:16px;
+  }
+  .brand .kicker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; letter-spacing:0.14em;
+    color:var(--olive); text-transform:uppercase;
+    margin:0 0 4px;
+  }
+  .brand h1{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:clamp(19px,3.4vw,26px);
+    margin:0;
+    color:var(--white);
+    line-height:1.05;
+  }
+  .brand .span{
+    color:var(--beige-dim); font-weight:400; font-style:italic;
+    font-size:0.62em; margin-left:8px;
+  }
+  .progress-wrap{
+    display:flex; flex-direction:column; align-items:flex-end; gap:6px;
+    min-width:150px;
+  }
+  .progress-count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px; color:var(--beige);
+    letter-spacing:0.02em;
+  }
+  .progress-count b{ color:var(--white); font-weight:500;}
+  .progress-bar{
+    width:150px; height:4px; background:rgba(233,225,203,0.14);
+    border-radius:0; position:relative; overflow:hidden;
+  }
+  .progress-bar i{
+    position:absolute; inset:0 auto 0 0; width:0%;
+    background:linear-gradient(90deg,var(--olive),var(--beige));
+    transition:width .6s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ---------- MAP STAGE ---------- */
+  .stage{
+    position:relative; flex:1; min-height:0;
+    display:flex; align-items:center; justify-content:center;
+    padding:4px 10px;
+  }
+  .map-frame{
+    position:relative;
+    width:min(100%, 980px);
+    height:100%;
+    max-height:100%;
+  }
+  svg#map{
+    width:100%; height:100%; display:block;
+    overflow:visible;
+  }
+  .country{
+    fill:var(--deep-green);
+    stroke:var(--olive);
+    stroke-width:1.6;
+    filter:drop-shadow(0 18px 34px rgba(0,0,0,0.55));
+  }
+  .country-texture{ fill:url(#hatch); opacity:0.5; pointer-events:none; }
+  .graticule line{ stroke:var(--line); stroke-width:1; stroke-dasharray:2 5; }
+  .grat-label{
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; fill:var(--beige-dim);
+    opacity:0.55;
+  }
+  #mapGroup{ transition:transform .75s cubic-bezier(.22,.61,.36,1); }
+
+  .city-dot{ fill:var(--beige-dim); opacity:0.55; }
+  .city-label{
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; fill:var(--beige-dim);
+    opacity:0.6; letter-spacing:0.04em;
+  }
+
+  .route-seg{ fill:none; stroke-linecap:round; }
+  .route-seg.done{ stroke:var(--beige); stroke-width:2; opacity:0.75; }
+  .route-seg.todo{ stroke:var(--beige-dim); stroke-width:1.3; stroke-dasharray:1 6; opacity:0.4; }
+
+  .edge-hint line{ stroke:var(--beige-dim); stroke-width:1; stroke-dasharray:3 4; opacity:0.55;}
+  .edge-hint text{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; fill:var(--beige-dim); opacity:0.7;}
+
+  /* ---------- MARKERS ---------- */
+  .marker{ cursor:pointer; }
+  .marker .halo{ fill:none; opacity:0; }
+  .marker .ring{ fill:none; stroke-width:1.6; transition:all .25s ease; }
+  .marker .core{ transition:all .25s ease; }
+  .marker text.num{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:500;
+    text-anchor:middle; dominant-baseline:central; pointer-events:none;
+  }
+  .marker text.yr{
+    font-family:'IBM Plex Mono',monospace; font-size:11px;
+    text-anchor:middle; pointer-events:none; letter-spacing:0.02em;
+  }
+
+  .marker.locked .ring{ stroke:var(--beige-dim); opacity:0.28; }
+  .marker.locked .core{ fill:var(--charcoal-2); opacity:0.5; }
+  .marker.locked text.num{ fill:var(--beige-dim); opacity:0.45;}
+  .marker.locked{ cursor:default; }
+  .marker.locked text.yr{ fill:var(--beige-dim); opacity:0.3; }
+
+  .marker.next .ring{ stroke:var(--beige); }
+  .marker.next .core{ fill:var(--olive); }
+  .marker.next text.num{ fill:var(--charcoal); }
+  .marker.next text.yr{ fill:var(--beige); }
+  .marker.next .halo{
+    stroke:var(--beige); stroke-width:1.4; opacity:0.55;
+    animation:pulse 2.1s ease-out infinite;
+  }
+  .marker.next:hover .core{ transform:scale(1.12); }
+
+  .marker.done .ring{ stroke:var(--red-bright); }
+  .marker.done .core{ fill:var(--red); }
+  .marker.done text.num{ fill:var(--beige); }
+  .marker.done text.yr{ fill:var(--beige); opacity:0.85; }
+  .marker.done:hover .core{ transform:scale(1.1); }
+
+  .marker.active .ring{ stroke:var(--white); stroke-width:2.1; }
+
+  @keyframes pulse{
+    0%{ transform:scale(1); opacity:0.6;}
+    75%{ transform:scale(2.6); opacity:0;}
+    100%{ transform:scale(2.6); opacity:0;}
+  }
+
+  .compass{ transform-origin:center; }
+  .scalebar text{ font-family:'IBM Plex Mono',monospace; font-size:10px; fill:var(--beige-dim);}
+  .scalebar line{ stroke:var(--beige-dim); stroke-width:1.4;}
+
+  /* ---------- BOTTOM NAV ---------- */
+  .bottombar{
+    position:relative; z-index:20;
+    display:flex; align-items:center; justify-content:center;
+    gap:14px;
+    padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));
+  }
+  .navbtn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px; letter-spacing:0.03em;
+    background:transparent; color:var(--beige);
+    border:1px solid var(--line-strong);
+    padding:10px 18px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+    transition:border-color .2s, background .2s, color .2s, transform .15s;
+  }
+  .navbtn:hover:not(:disabled){ border-color:var(--olive); background:rgba(121,136,90,0.1); }
+  .navbtn:active:not(:disabled){ transform:translateY(1px); }
+  .navbtn:disabled{ opacity:0.3; cursor:default; }
+  .dots{ display:flex; gap:6px; align-items:center; }
+  .dots span{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--beige-dim); opacity:0.35;
+  }
+  .dots span.on{ background:var(--red-bright); opacity:1; }
+  .dots span.cur{ background:var(--white); opacity:1; }
+  .reset-link{
+    position:absolute; right:20px; bottom:calc(18px + env(safe-area-inset-bottom,0px));
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--beige-dim);
+    background:none; border:none; cursor:pointer; opacity:0.55; letter-spacing:0.03em;
+    text-decoration:underline; text-underline-offset:3px;
+  }
+  .reset-link:hover{ opacity:0.9; color:var(--beige); }
+
+  /* ---------- CARD ---------- */
+  .overlay{
+    position:fixed; inset:0; z-index:40;
+    background:rgba(10,11,7,0.55);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .3s ease;
+  }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  @media (min-width:720px){
+    .overlay{ align-items:center; }
+  }
+
+  .card{
+    position:relative;
+    width:min(560px, 100%);
+    max-height:min(72vh, 620px);
+    background:var(--panel);
+    border-top:1px solid var(--olive);
+    box-shadow:0 -20px 60px rgba(0,0,0,0.5);
+    padding:26px 24px 22px;
+    overflow-y:auto;
+    transform:translateY(24px);
+    transition:transform .35s cubic-bezier(.22,.61,.36,1);
+  }
+  @media (min-width:720px){
+    .card{ border:1px solid var(--olive); box-shadow:0 30px 70px rgba(0,0,0,0.55); }
+  }
+  .overlay.show .card{ transform:translateY(0); }
+
+  .card-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:14px; gap:12px;
+  }
+  .card-year{
+    font-family:'Fraunces',serif; font-weight:500;
+    font-size:34px; color:var(--white); line-height:1;
+  }
+  .card-range{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--olive);
+    margin-top:6px; letter-spacing:0.03em;
+  }
+  .card-close{
+    background:none; border:1px solid var(--line-strong); color:var(--beige);
+    width:30px; height:30px; cursor:pointer; font-size:15px; line-height:1;
+    flex-shrink:0;
+  }
+  .card-close:hover{ border-color:var(--red-bright); color:var(--red-bright); }
+
+  .card-icon{ width:46px; height:46px; margin-bottom:14px; color:var(--beige); }
+  .card-icon svg{ width:100%; height:100%; overflow:visible; }
+  .card-icon path,.card-icon circle,.card-icon line{
+    fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round;
+  }
+
+  .card h2{
+    font-family:'Fraunces',serif; font-weight:500; font-size:21px;
+    margin:0 0 4px; color:var(--white);
+  }
+  .card .place{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--beige-dim);
+    margin:0 0 14px; letter-spacing:0.02em;
+  }
+  .card .place b{ color:var(--beige); font-weight:500; }
+  .card p.body{
+    font-size:15px; line-height:1.62; color:var(--beige); margin:0 0 18px;
+    max-width:62ch;
+  }
+  .card-foot{
+    display:flex; justify-content:space-between; align-items:center;
+    border-top:1px solid var(--line); padding-top:14px;
+  }
+  .card-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--beige-dim);
+    letter-spacing:0.06em;
+  }
+  .card-nav{ display:flex; gap:8px; }
+  .card-nav button{
+    background:none; border:1px solid var(--line-strong); color:var(--beige);
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+    padding:7px 12px; cursor:pointer; transition:border-color .2s;
+  }
+  .card-nav button:hover:not(:disabled){ border-color:var(--olive); }
+  .card-nav button:disabled{ opacity:0.3; cursor:default; }
+
+  /* ---------- FINAL MESSAGE ---------- */
+  .finale{
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(10,11,7,0.78);
+    opacity:0; pointer-events:none; transition:opacity .5s ease;
+    padding:20px;
+  }
+  .finale.show{ opacity:1; pointer-events:auto; }
+  .finale-box{
+    text-align:center; max-width:480px;
+    border:1px solid var(--olive); padding:44px 34px;
+    background:var(--panel);
+    transform:scale(.96); transition:transform .5s cubic-bezier(.22,.61,.36,1);
+  }
+  .finale.show .finale-box{ transform:scale(1); }
+  .finale-stamp{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.18em;
+    color:var(--red-bright); margin-bottom:16px;
+  }
+  .finale-box h2{
+    font-family:'Fraunces',serif; font-weight:500; font-size:26px;
+    color:var(--white); margin:0 0 14px; line-height:1.25;
+  }
+  .finale-box p{ color:var(--beige-dim); font-size:14px; line-height:1.6; margin:0 0 22px; }
+  .finale-box button{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--beige);
+    background:none; border:1px solid var(--line-strong); padding:10px 20px; cursor:pointer;
+  }
+  .finale-box button:hover{ border-color:var(--olive); }
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:90px; transform:translate(-50%,10px);
+    background:var(--panel); border:1px solid var(--line-strong);
+    color:var(--beige); font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+    padding:10px 16px; z-index:60; opacity:0; pointer-events:none;
+    transition:opacity .25s, transform .25s;
+    max-width:88vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--olive-dim); }
+
+  @media (max-width:640px){
+    .topbar{ padding:14px 14px 6px; }
+    .brand h1{ font-size:18px; }
+    .brand .span{ display:block; margin-left:0; }
+    .progress-wrap{ min-width:110px; }
+    .progress-bar{ width:110px; }
+    .bottombar{ gap:8px; padding:10px 12px calc(14px + env(safe-area-inset-bottom,0px)); }
+    .navbtn{ padding:9px 12px; font-size:11.5px; }
+    .navbtn span.lbl{ display:none; }
+    .reset-link{ display:none; }
+    .card{ padding:22px 18px 18px; }
+    .card-year{ font-size:28px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001s !important; transition-duration:0.001s !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <p class="kicker">Mapa · cronología documental</p>
+      <h1>Sudán del Sur<span class="span">conflicto, 2011–2026</span></h1>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-count"><b id="pCount">0</b> / 8 acontecimientos</div>
+      <div class="progress-bar"><i id="pFill"></i></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="map-frame">
+      <svg id="map" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa interactivo de Sudán del Sur con línea de tiempo del conflicto">
+        <defs>
+          <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="7" stroke="rgba(233,225,203,0.05)" stroke-width="1"></line>
+          </pattern>
+        </defs>
+
+        <!-- graticule spans full canvas for documentary map feel -->
+        <g class="graticule">
+          <line x1="68.7" y1="0" x2="68.7" y2="900"></line>
+          <line x1="222.9" y1="0" x2="222.9" y2="900"></line>
+          <line x1="377.2" y1="0" x2="377.2" y2="900"></line>
+          <line x1="531.4" y1="0" x2="531.4" y2="900"></line>
+          <line x1="685.7" y1="0" x2="685.7" y2="900"></line>
+          <line x1="839.9" y1="0" x2="839.9" y2="900"></line>
+          <line x1="0" y1="752" x2="1000" y2="752"></line>
+          <line x1="0" y1="596.2" x2="1000" y2="596.2"></line>
+          <line x1="0" y1="440.6" x2="1000" y2="440.6"></line>
+          <line x1="0" y1="284.8" x2="1000" y2="284.8"></line>
+          <line x1="0" y1="129.1" x2="1000" y2="129.1"></line>
+        </g>
+        <g>
+          <text class="grat-label" x="68.7" y="14" text-anchor="middle">24°E</text>
+          <text class="grat-label" x="222.9" y="14" text-anchor="middle">26°E</text>
+          <text class="grat-label" x="377.2" y="14" text-anchor="middle">28°E</text>
+          <text class="grat-label" x="531.4" y="14" text-anchor="middle">30°E</text>
+          <text class="grat-label" x="685.7" y="14" text-anchor="middle">32°E</text>
+          <text class="grat-label" x="839.9" y="14" text-anchor="middle">34°E</text>
+          <text class="grat-label" x="8" y="756" text-anchor="start">4°N</text>
+          <text class="grat-label" x="8" y="600" text-anchor="start">6°N</text>
+          <text class="grat-label" x="8" y="444" text-anchor="start">8°N</text>
+          <text class="grat-label" x="8" y="289" text-anchor="start">10°N</text>
+          <text class="grat-label" x="8" y="133" text-anchor="start">12°N</text>
+        </g>
+
+        <g id="mapGroup">
+          <path class="country" d="M 837.08,326.55 L 837.97,387.25 L 826.44,411.03 L 785.52,412.94 L 759.25,457.29 L 806.61,462.87 L 845.69,500.81 L 859.2,531.94 L 894.42,549.99 L 940.0,634.71 L 887.73,686.01 L 840.29,732.51 L 792.86,768.31 L 738.6,768.13 L 676.52,786.35 L 627.48,768.94 L 595.73,790.17 L 527.84,738.44 L 509.52,705.19 L 466.58,721.66 L 430.92,716.53 L 410.27,729.6 L 375.65,720.16 L 328.93,655.89 L 316.53,631.21 L 258.88,600.4 L 239.41,553.7 L 207.27,520.01 L 155.41,479.47 L 154.7,454.16 L 112.47,422.7 L 60.0,392.3 L 83.68,383.82 L 110.16,369.11 L 130.02,299.61 L 151.2,263.53 L 206.81,252.84 L 220.05,274.22 L 259.76,319.66 L 280.95,326.35 L 308.75,312.98 L 364.35,315.65 L 374.94,331.69 L 451.73,331.69 L 454.38,315.65 L 494.1,300.95 L 502.04,278.23 L 531.17,262.19 L 596.04,307.63 L 635.76,299.61 L 674.15,243.48 L 716.52,200.71 L 709.9,153.93 L 691.36,131.21 L 737.7,127.2 L 742.99,109.83 L 778.74,115.17 L 769.47,172.64 L 778.74,228.78 L 818.46,259.52 L 827.73,286.25 L 826.4,325.01 L 837.08,326.55 Z"></path>
+          <path class="country-texture" d="M 837.08,326.55 L 837.97,387.25 L 826.44,411.03 L 785.52,412.94 L 759.25,457.29 L 806.61,462.87 L 845.69,500.81 L 859.2,531.94 L 894.42,549.99 L 940.0,634.71 L 887.73,686.01 L 840.29,732.51 L 792.86,768.31 L 738.6,768.13 L 676.52,786.35 L 627.48,768.94 L 595.73,790.17 L 527.84,738.44 L 509.52,705.19 L 466.58,721.66 L 430.92,716.53 L 410.27,729.6 L 375.65,720.16 L 328.93,655.89 L 316.53,631.21 L 258.88,600.4 L 239.41,553.7 L 207.27,520.01 L 155.41,479.47 L 154.7,454.16 L 112.47,422.7 L 60.0,392.3 L 83.68,383.82 L 110.16,369.11 L 130.02,299.61 L 151.2,263.53 L 206.81,252.84 L 220.05,274.22 L 259.76,319.66 L 280.95,326.35 L 308.75,312.98 L 364.35,315.65 L 374.94,331.69 L 451.73,331.69 L 454.38,315.65 L 494.1,300.95 L 502.04,278.23 L 531.17,262.19 L 596.04,307.63 L 635.76,299.61 L 674.15,243.48 L 716.52,200.71 L 709.9,153.93 L 691.36,131.21 L 737.7,127.2 L 742.99,109.83 L 778.74,115.17 L 769.47,172.64 L 778.74,228.78 L 818.46,259.52 L 827.73,286.25 L 826.4,325.01 L 837.08,326.55 Z"></path>
+
+          <!-- decorative real cities for cartographic texture -->
+          <g id="cityDecor"></g>
+
+          <!-- route between chronological points -->
+          <g id="routeGroup"></g>
+
+          <!-- Juba cluster connector lines -->
+          <g id="clusterLines" stroke="var(--line-strong)" stroke-width="1" stroke-dasharray="1 4"></g>
+
+          <!-- edge hint to Khartoum -->
+          <g class="edge-hint">
+            <line x1="726" y1="60" x2="726" y2="128"></line>
+            <text x="726" y="46" text-anchor="middle">↑ Jartum, Sudán</text>
+          </g>
+
+          <!-- event markers injected by JS -->
+          <g id="markers"></g>
+        </g>
+
+        <!-- compass rose (fixed, not zoomed) -->
+        <g class="compass" transform="translate(96,822)">
+          <circle r="22" fill="none" stroke="var(--beige-dim)" stroke-width="1" opacity="0.5"></circle>
+          <line x1="0" y1="-16" x2="0" y2="16" stroke="var(--beige-dim)" stroke-width="1" opacity="0.5"></line>
+          <line x1="-16" y1="0" x2="16" y2="0" stroke="var(--beige-dim)" stroke-width="1" opacity="0.5"></line>
+          <path d="M 0,-16 L -5,-4 L 5,-4 Z" fill="var(--beige)"></path>
+          <text y="-26" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--beige-dim)">N</text>
+        </g>
+
+        <!-- scale bar (fixed) -->
+        <g class="scalebar" transform="translate(800,830)">
+          <line x1="0" y1="0" x2="140" y2="0"></line>
+          <line x1="0" y1="-4" x2="0" y2="4"></line>
+          <line x1="140" y1="-4" x2="140" y2="4"></line>
+          <text x="0" y="18">0</text>
+          <text x="120" y="18">200 km</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="bottombar">
+    <button class="navbtn" id="btnPrev" disabled>← <span class="lbl">Anterior</span></button>
+    <div class="dots" id="dots"></div>
+    <button class="navbtn" id="btnNext">Siguiente <span class="lbl">→</span></button>
+  </div>
+  <button class="reset-link" id="btnReset">reiniciar recorrido</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="card" id="card" role="dialog" aria-modal="true">
+    <div class="card-top">
+      <div>
+        <div class="card-year" id="cYear">2011</div>
+        <div class="card-range" id="cRange">9 de julio de 2011</div>
+      </div>
+      <button class="card-close" id="cClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="card-icon" id="cIcon"></div>
+    <h2 id="cTitle">Nace un país</h2>
+    <p class="place" id="cPlace">Juba, capital · <b>04°51′N 31°35′E</b></p>
+    <p class="body" id="cBody"></p>
+    <div class="card-foot">
+      <span class="card-tag" id="cTag">EXPEDIENTE 1/8</span>
+      <div class="card-nav">
+        <button id="cPrev">← anterior</button>
+        <button id="cNext">siguiente →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="finale" id="finale">
+  <div class="finale-box">
+    <div class="finale-stamp">— RECORRIDO COMPLETO —</div>
+    <h2>Has recorrido la historia del conflicto de Sudán del Sur.</h2>
+    <p>Ocho puntos, quince años, un país que aún negocia su propia paz. Las elecciones fijadas para el 22 de diciembre de 2026 serán la próxima entrada de esta cronología.</p>
+    <button id="finaleClose">Volver al mapa</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+  var EVENTS = [
+    {
+      year:"2011", range:"9 de julio de 2011", title:"Nace un país",
+      place:"Juba, capital", coords:"04°51′N 31°35′E",
+      x:653, y:686,
+      body:"Sudán del Sur se independiza de Sudán tras más de dos décadas de guerra civil, convirtiéndose en el país más joven del mundo. Salva Kiir asume la presidencia y Riek Machar, antiguo comandante rebelde, se convierte en su vicepresidente. La euforia esconde tensiones de poder que pronto saldrán a la luz.",
+      icon:"flag"
+    },
+    {
+      year:"2013", range:"diciembre de 2013", title:"Estalla la guerra civil",
+      place:"Juba → Bor, Jonglei", coords:"06°13′N 31°34′E",
+      x:651.73, y:579.91,
+      body:"Kiir destituye a Machar del gobierno en julio. La desconfianza escala hasta que, el 15 de diciembre, un choque entre guardias presidenciales en Juba desata la violencia. En días, el conflicto se extiende a Bor y otras ciudades, con un marcado tinte étnico entre dinkas y nuer.",
+      icon:"fracture"
+    },
+    {
+      year:"2015", range:"agosto de 2015", title:"Primer acuerdo de paz",
+      place:"Juba / Adís Abeba", coords:"04°51′N 31°35′E",
+      x:621, y:668,
+      body:"Bajo presión de la mediación regional (IGAD), Machar firma el acuerdo en Adís Abeba y Kiir lo hace días después en Juba. El pacto (ARCSS) prevé un gobierno de transición compartido, pero deja sin resolver el control militar y territorial del país.",
+      icon:"accord"
+    },
+    {
+      year:"2016", range:"julio de 2016", title:"Colapso en Juba",
+      place:"Juba", coords:"04°51′N 31°35′E",
+      x:685, y:668,
+      body:"Machar regresa a la capital como vicepresidente en abril, pero en julio estallan combates entre su guardia y las fuerzas de Kiir en el complejo presidencial. Machar huye del país; el acuerdo de 2015 queda en ruinas y la guerra se reaviva.",
+      icon:"break"
+    },
+    {
+      year:"2018", range:"septiembre de 2018", title:"Acuerdo revitalizado",
+      place:"Jartum, Sudán (fuera del mapa)", coords:"15°30′N 32°32′E",
+      x:726, y:40,
+      body:"Tras años de estancamiento y nuevas masacres, se firma en Jartum el Acuerdo Revitalizado (R-ARCSS). Traza una hoja de ruta hacia un gobierno de unidad, la unificación del ejército y una constitución permanente: promesas que tardarán años en cumplirse solo en parte.",
+      icon:"seal"
+    },
+    {
+      year:"2020", range:"22 de febrero de 2020", title:"Gobierno de unidad",
+      place:"Juba", coords:"04°51′N 31°35′E",
+      x:653, y:720,
+      body:"Tras sucesivas prórrogas, se forma en Juba el gobierno de transición: Kiir como presidente y Machar, de nuevo, primer vicepresidente. El país vuelve a diez estados y tres áreas administrativas especiales, resolviendo parcialmente una vieja disputa territorial.",
+      icon:"union"
+    },
+    {
+      year:"2021–2023", range:"2021 – 2023", title:"Implementación estancada",
+      place:"Tambura, Ecuatoria Occidental", coords:"05°36′N 27°52′E",
+      x:367.16, y:627.4,
+      body:"Los plazos para unificar el ejército y redactar una constitución se incumplen una y otra vez. Estallan brotes de violencia intercomunitaria, como en Tambura en 2021. Las elecciones previstas para 2023 se posponen hasta diciembre de 2026 por falta de seguridad y financiamiento.",
+      icon:"stall"
+    },
+    {
+      year:"2024–2026", range:"2025 – 2026", title:"Ruptura y ofensiva",
+      place:"Nasir, Alto Nilo", coords:"08°37′N 33°08′E",
+      x:772.81, y:393.06,
+      body:"En marzo de 2025 estalla violencia en Nasir y Alto Nilo. En septiembre, Machar es acusado de traición y puesto bajo arresto domiciliario en Juba. En enero de 2026 el ejército lanza una ofensiva en Jonglei, mientras el país se acerca a elecciones fijadas para el 22 de diciembre de 2026.",
+      icon:"alert"
+    }
+  ];
+
+  var DECOR_CITIES = [
+    {n:"Malakal", x:659.44, y:321.43},
+    {n:"Bentiu", x:515.23, y:344.79},
+    {n:"Wau", x:376.42, y:463.9},
+    {n:"Rumbek", x:506.75, y:533.97},
+    {n:"Torit", x:729.62, y:720.04},
+    {n:"Yambio", x:408.81, y:707.58},
+    {n:"Aweil", x:330.92, y:380.6},
+    {n:"Pibor", x:772.81, y:533.97}
+  ];
+
+  var ICONS = {
+    flag:'<path d="M14 4v40"/><path d="M14 8 L38 14 L14 22"/><line x1="6" y1="44" x2="22" y2="44"/>',
+    fracture:'<line x1="9" y1="9" x2="39" y2="39"/><line x1="39" y1="9" x2="9" y2="39"/><circle cx="24" cy="24" r="5"/>',
+    accord:'<circle cx="18" cy="24" r="13"/><circle cx="30" cy="24" r="13"/>',
+    break:'<rect x="6" y="10" width="36" height="28"/><path d="M6 24 L18 16 L26 30 L34 20 L42 24"/>',
+    seal:'<circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="9"/><line x1="24" y1="3" x2="24" y2="9"/><line x1="24" y1="39" x2="24" y2="45"/><line x1="3" y1="24" x2="9" y2="24"/><line x1="39" y1="24" x2="45" y2="24"/>',
+    union:'<line x1="6" y1="42" x2="42" y2="42"/><path d="M10 42 V22 M18 42 V22 M24 42 V22 M30 42 V22 M38 42 V22"/><path d="M4 22 L24 6 L44 22 Z"/>',
+    stall:'<path d="M12 6 H36 L24 24 L36 42 H12 L24 24 Z"/>',
+    alert:'<line x1="24" y1="24" x2="24" y2="6"/><line x1="24" y1="24" x2="38" y2="14"/><line x1="24" y1="24" x2="42" y2="24"/><line x1="24" y1="24" x2="38" y2="34"/><line x1="24" y1="24" x2="24" y2="42"/><line x1="24" y1="24" x2="10" y2="34"/><line x1="24" y1="24" x2="6" y2="24"/><line x1="24" y1="24" x2="10" y2="14"/><circle cx="24" cy="24" r="4"/>'
+  };
+
+  var svgNS = "http://www.w3.org/2000/svg";
+  var markersG = document.getElementById('markers');
+  var cityG = document.getElementById('cityDecor');
+  var routeG = document.getElementById('routeGroup');
+  var clusterG = document.getElementById('clusterLines');
+  var mapGroup = document.getElementById('mapGroup');
+
+  var maxDiscovered = -1;   // highest index already opened
+  var currentIndex = -1;    // index currently focused/viewed on map (not necessarily card-open)
+
+  // ---- restore progress ----
+  try{
+    var saved = localStorage.getItem('ssd-timeline-progress-v1');
+    if(saved !== null){
+      var v = parseInt(saved,10);
+      if(!isNaN(v) && v >= -1 && v < EVENTS.length) maxDiscovered = v;
+    }
+  }catch(e){}
+
+  function saveProgress(){
+    try{ localStorage.setItem('ssd-timeline-progress-v1', String(maxDiscovered)); }catch(e){}
+  }
+
+  // ---- decorative cities ----
+  DECOR_CITIES.forEach(function(c){
+    var dot = document.createElementNS(svgNS,'circle');
+    dot.setAttribute('class','city-dot'); dot.setAttribute('r','2.6');
+    dot.setAttribute('cx',c.x); dot.setAttribute('cy',c.y);
+    cityG.appendChild(dot);
+    var lbl = document.createElementNS(svgNS,'text');
+    lbl.setAttribute('class','city-label'); lbl.setAttribute('x',c.x+6); lbl.setAttribute('y',c.y+3);
+    lbl.textContent = c.n;
+    cityG.appendChild(lbl);
+  });
+  // Juba city label (below the event cluster)
+  (function(){
+    var lbl = document.createElementNS(svgNS,'text');
+    lbl.setAttribute('class','city-label'); lbl.setAttribute('x',653); lbl.setAttribute('y',748);
+    lbl.setAttribute('text-anchor','middle'); lbl.textContent = 'JUBA · capital';
+    lbl.style.opacity = 0.75;
+    cityG.appendChild(lbl);
+  })();
+
+  // ---- cluster connector lines (Juba group: idx 0,2,3,5) ----
+  [0,2,3,5].forEach(function(i){
+    var e = EVENTS[i];
+    var l = document.createElementNS(svgNS,'line');
+    l.setAttribute('x1',653); l.setAttribute('y1',686);
+    l.setAttribute('x2',e.x); l.setAttribute('y2',e.y);
+    clusterG.appendChild(l);
+  });
+
+  // ---- route segments between consecutive events ----
+  var routeLines = [];
+  for(var i=0;i<EVENTS.length-1;i++){
+    var a = EVENTS[i], b = EVENTS[i+1];
+    var line = document.createElementNS(svgNS,'path');
+    line.setAttribute('class','route-seg todo');
+    var mx = (a.x+b.x)/2 + (i%2===0?1:-1)*18;
+    var my = (a.y+b.y)/2 + (i%2===0?-1:1)*18;
+    line.setAttribute('d','M '+a.x+','+a.y+' Q '+mx+','+my+' '+b.x+','+b.y);
+    routeG.appendChild(line);
+    routeLines.push(line);
+  }
+
+  // ---- markers ----
+  var markerEls = [];
+  EVENTS.forEach(function(ev, i){
+    var g = document.createElementNS(svgNS,'g');
+    g.setAttribute('class','marker locked');
+    g.setAttribute('transform','translate('+ev.x+','+ev.y+')');
+    g.setAttribute('tabindex','0');
+    g.setAttribute('role','button');
+    g.setAttribute('aria-label', ev.year+': '+ev.title);
+
+    var halo = document.createElementNS(svgNS,'circle');
+    halo.setAttribute('class','halo'); halo.setAttribute('r','11');
+    g.appendChild(halo);
+
+    var ring = document.createElementNS(svgNS,'circle');
+    ring.setAttribute('class','ring'); ring.setAttribute('r','11');
+    g.appendChild(ring);
+
+    var core = document.createElementNS(svgNS,'circle');
+    core.setAttribute('class','core'); core.setAttribute('r','7.5');
+    g.appendChild(core);
+
+    var num = document.createElementNS(svgNS,'text');
+    num.setAttribute('class','num'); num.textContent = (i+1);
+    g.appendChild(num);
+
+    var yr = document.createElementNS(svgNS,'text');
+    yr.setAttribute('class','yr'); yr.setAttribute('y','-20');
+    yr.textContent = ev.year;
+    g.appendChild(yr);
+
+    g.addEventListener('click', function(){ onMarkerClick(i); });
+    g.addEventListener('keydown', function(ev2){
+      if(ev2.key === 'Enter' || ev2.key === ' '){ ev2.preventDefault(); onMarkerClick(i); }
+    });
+
+    markersG.appendChild(g);
+    markerEls.push(g);
+  });
+
+  // ---- dots (bottom nav progress indicators) ----
+  var dotsWrap = document.getElementById('dots');
+  var dotEls = [];
+  EVENTS.forEach(function(_,i){
+    var d = document.createElement('span');
+    dotsWrap.appendChild(d);
+    dotEls.push(d);
+  });
+
+  function refreshVisuals(){
+    markerEls.forEach(function(g,i){
+      g.classList.remove('locked','next','done','active');
+      if(i <= maxDiscovered) g.classList.add('done');
+      else if(i === maxDiscovered+1) g.classList.add('next');
+      else g.classList.add('locked');
+      if(i === currentIndex) g.classList.add('active');
+    });
+    routeLines.forEach(function(l,i){
+      if(i < maxDiscovered){ l.setAttribute('class','route-seg done'); }
+      else { l.setAttribute('class','route-seg todo'); }
+    });
+    dotEls.forEach(function(d,i){
+      d.className = '';
+      if(i <= maxDiscovered) d.classList.add('on');
+      if(i === currentIndex) d.classList.add('cur');
+    });
+    var count = maxDiscovered+1;
+    document.getElementById('pCount').textContent = count;
+    document.getElementById('pFill').style.width = (count/EVENTS.length*100)+'%';
+
+    document.getElementById('btnPrev').disabled = currentIndex <= 0;
+    var canGoNext = currentIndex < EVENTS.length-1 && (currentIndex <= maxDiscovered || currentIndex === -1);
+    document.getElementById('btnNext').disabled = !(currentIndex < EVENTS.length-1);
+  }
+
+  function zoomTo(ev){
+    var cx = 500, cy = 450, s = 1.55;
+    var tx = cx - ev.x*s;
+    var ty = cy - ev.y*s;
+    mapGroup.style.transform = 'translate('+tx+'px,'+ty+'px) scale('+s+')';
+  }
+  function zoomReset(){
+    mapGroup.style.transform = 'translate(0,0) scale(1)';
+  }
+
+  var toastTimer = null;
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+
+  function onMarkerClick(i){
+    if(i > maxDiscovered+1){
+      showToast('Descubre primero los acontecimientos anteriores →');
+      return;
+    }
+    currentIndex = i;
+    zoomTo(EVENTS[i]);
+    openCard(i);
+    refreshVisuals();
+  }
+
+  // ---- CARD ----
+  var overlay = document.getElementById('overlay');
+  var cYear = document.getElementById('cYear');
+  var cRange = document.getElementById('cRange');
+  var cTitle = document.getElementById('cTitle');
+  var cPlace = document.getElementById('cPlace');
+  var cBody = document.getElementById('cBody');
+  var cTag = document.getElementById('cTag');
+  var cIcon = document.getElementById('cIcon');
+  var cPrev = document.getElementById('cPrev');
+  var cNext = document.getElementById('cNext');
+
+  function openCard(i){
+    var ev = EVENTS[i];
+    cYear.textContent = ev.year;
+    cRange.textContent = ev.range;
+    cTitle.textContent = ev.title;
+    cPlace.innerHTML = ev.place+' · <b>'+ev.coords+'</b>';
+    cBody.textContent = ev.body;
+    cTag.textContent = 'EXPEDIENTE '+(i+1)+'/'+EVENTS.length;
+    cIcon.innerHTML = '<svg viewBox="0 0 48 48">'+ICONS[ev.icon]+'</svg>';
+
+    // draw-in animation
+    var paths = cIcon.querySelectorAll('path,circle,line');
+    paths.forEach(function(p){
+      var len;
+      try{ len = p.getTotalLength ? p.getTotalLength() : 60; }catch(e){ len = 60; }
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
+      p.style.transition = 'none';
+      // force reflow
+      p.getBoundingClientRect();
+      p.style.transition = 'stroke-dashoffset .8s cubic-bezier(.22,.61,.36,1)';
+      requestAnimationFrame(function(){ p.style.strokeDashoffset = 0; });
+    });
+
+    cPrev.disabled = i <= 0;
+    cNext.disabled = i > maxDiscovered && i >= EVENTS.length-1 ? true : (i >= EVENTS.length-1);
+
+    if(i > maxDiscovered){
+      maxDiscovered = i;
+      saveProgress();
+    }
+    overlay.classList.add('show');
+    refreshVisuals();
+
+    if(maxDiscovered === EVENTS.length-1){
+      setTimeout(showFinale, 900);
+    }
+  }
+
+  function closeCard(){
+    overlay.classList.remove('show');
+  }
+
+  document.getElementById('cClose').addEventListener('click', closeCard);
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) closeCard(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') closeCard();
+  });
+
+  cPrev.addEventListener('click', function(){
+    if(currentIndex > 0){ currentIndex--; zoomTo(EVENTS[currentIndex]); openCard(currentIndex); }
+  });
+  cNext.addEventListener('click', function(){
+    if(currentIndex < EVENTS.length-1){
+      var nextI = currentIndex+1;
+      if(nextI <= maxDiscovered+1){
+        currentIndex = nextI;
+        zoomTo(EVENTS[currentIndex]);
+        openCard(currentIndex);
+      }
+    }
+  });
+
+  // ---- bottom nav ----
+  document.getElementById('btnPrev').addEventListener('click', function(){
+    if(currentIndex > 0){
+      currentIndex--;
+      zoomTo(EVENTS[currentIndex]);
+      openCard(currentIndex);
+    }
+  });
+  document.getElementById('btnNext').addEventListener('click', function(){
+    var nextI = currentIndex + 1;
+    if(nextI >= EVENTS.length) return;
+    if(nextI > maxDiscovered+1){
+      showToast('Descubre primero los acontecimientos anteriores →');
+      return;
+    }
+    currentIndex = nextI;
+    zoomTo(EVENTS[currentIndex]);
+    openCard(currentIndex);
+  });
+
+  // ---- finale ----
+  var finale = document.getElementById('finale');
+  function showFinale(){ finale.classList.add('show'); }
+  document.getElementById('finaleClose').addEventListener('click', function(){
+    finale.classList.remove('show');
+  });
+
+  // ---- reset ----
+  document.getElementById('btnReset').addEventListener('click', function(){
+    maxDiscovered = -1; currentIndex = -1;
+    saveProgress();
+    closeCard();
+    finale.classList.remove('show');
+    zoomReset();
+    refreshVisuals();
+    showToast('Recorrido reiniciado. Comienza de nuevo en 2011.');
+  });
+
+  // init: if resuming with saved progress, focus last discovered point
+  currentIndex = maxDiscovered >= 0 ? maxDiscovered : -1;
+  refreshVisuals();
+
+})();
+</script>
+</body>
+</html>
